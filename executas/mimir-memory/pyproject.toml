@@ -1,0 +1,13 @@
+[project]
+name = "mimir-memory"
+version = "1.0.0"
+description = "Recall — persistent memory Executa plugin for Anna"
+requires-python = ">=3.10"
+dependencies = []
+
+[project.scripts]
+mimir-memory = "mimir_memory_plugin:main"
+
+[tool.executa]
+entrypoint = "mimir_memory_plugin.py"
+runtime = "python"

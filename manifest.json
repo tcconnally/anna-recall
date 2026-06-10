@@ -1,0 +1,32 @@
+{
+  "schema": 2,
+  "required_executas": [
+    { "tool_id": "tool-dev-mimir-memory" }
+  ],
+  "optional_executas": [],
+  "permissions": [
+    "storage.read",
+    "storage.write"
+  ],
+  "system_prompt_addendum": "You have persistent memory through the Recall tools (remember, recall, forget, context, stats, health). At the start of every conversation, call recall() to load relevant context about the user. When the user shares a preference, decision, or important fact, call remember() to store it. Be specific and tag liberally. Use forget() when the user corrects outdated info. This makes you dramatically more useful over time — you'll know their name, preferences, projects, and past decisions without being told twice.",
+  "user_message_prefix_template": "{user_message}",
+  "tags": ["memory", "productivity", "developer-tools"],
+  "ui": {
+    "views": {
+      "main": {
+        "label": "Recall",
+        "description": "Memory dashboard",
+        "icon": "🧠",
+        "default_size": { "width": 700, "height": 500 }
+      }
+    },
+    "host_api": {
+      "tools": ["tool-dev-mimir-memory"],
+      "storage": ["set", "get"],
+      "window": ["set_title", "ready"]
+    }
+  },
+  "dev": {
+    "user_id": 1
+  }
+}

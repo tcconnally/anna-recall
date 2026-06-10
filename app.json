@@ -1,0 +1,10 @@
+{
+  "name": "Recall — Persistent Memory for Anna",
+  "slug": "recall",
+  "category": "productivity",
+  "tagline": "Never ask twice. Persistent, searchable memory that follows you across every conversation.",
+  "description": "Recall gives Anna agents long-term memory. The agent automatically remembers your preferences, decisions, project context, and important facts — then recalls them in future conversations so you never have to repeat yourself.\n\nBuilt on Mimir, a battle-tested persistent memory backend, Recall stores structured memories with categories, tags, importance scoring, and full-text search. It's like giving Anna a notebook that never fills up.\n\n**Features:**\n- Automatic memory — the agent decides what's worth remembering\n- Full-text search — find anything by keyword or topic  \n- Smart decay — old, unused memories fade; important ones stick\n- Memory dashboard — browse, search, and manage what's stored\n\n**Built with:** Python, Mimir, Anna Executa protocol",
+  "homepage_url": "https://github.com/tcconnally/anna-recall",
+  "repository_url": "https://github.com/tcconnally/anna-recall",
+  "pricing_model": "free"
+}

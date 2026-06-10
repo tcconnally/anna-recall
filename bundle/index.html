@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Recall — Memory Dashboard</title>
+<style>
+  :root {
+    --bg: #0d1117;
+    --surface: #161b22;
+    --border: #30363d;
+    --text: #c9d1d9;
+    --text-dim: #8b949e;
+    --accent: #58a6ff;
+    --accent-dim: #1f6feb;
+    --green: #3fb950;
+    --orange: #d2991d;
+    --red: #f85149;
+    --purple: #a371f7;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+    font-size: 14px;
+    line-height: 1.5;
+    padding: 24px;
+    min-height: 100vh;
+  }
+  header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 24px;
+  }
+  header h1 { font-size: 20px; font-weight: 600; }
+  header .icon { font-size: 28px; }
+  .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 16px;
+  }
+  .card h2 {
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--text-dim);
+    margin-bottom: 12px;
+  }
+  .stat-row { display: flex; gap: 24px; }
+  .stat { text-align: center; }
+  .stat .value { font-size: 32px; font-weight: 700; color: var(--accent); }
+  .stat .label { font-size: 11px; color: var(--text-dim); margin-top: 2px; }
+  #search-input {
+    width: 100%;
+    padding: 8px 12px;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    color: var(--text);
+    font-size: 14px;
+    outline: none;
+  }
+  #search-input:focus { border-color: var(--accent); }
+  #search-input::placeholder { color: var(--text-dim); }
+  #memory-list { margin-top: 12px; max-height: 300px; overflow-y: auto; }
+  .memory-item {
+    padding: 10px;
+    border-bottom: 1px solid var(--border);
+    animation: fadeIn 0.3s ease;
+  }
+  .memory-item:last-child { border-bottom: none; }
+  .memory-item .category {
+    display: inline-block;
+    font-size: 10px;
+    font-weight: 600;
+    text-transform: uppercase;
+    padding: 2px 6px;
+    border-radius: 3px;
+    margin-right: 6px;
+    background: var(--accent-dim);
+    color: var(--accent);
+  }
+  .memory-item .category.preference { background: #1f3a1f; color: var(--green); }
+  .memory-item .category.decision { background: #3a2f10; color: var(--orange); }
+  .memory-item .category.project { background: #2a1f3a; color: var(--purple); }
+  .memory-item .category.person { background: #1f3a1f; color: var(--green); }
+  .memory-item .category.insight { background: #1f3a1f; color: var(--green); }
+  .memory-item .fact { margin-top: 4px; font-size: 13px; }
+  .memory-item .meta { font-size: 11px; color: var(--text-dim); margin-top: 4px; }
+  .loading { color: var(--text-dim); text-align: center; padding: 24px; }
+  .empty { color: var(--text-dim); text-align: center; padding: 24px; font-style: italic; }
+  .error { color: var(--red); text-align: center; padding: 24px; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
+  @media (max-width: 600px) { .grid { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+<header>
+  <span class="icon">🧠</span>
+  <h1>Recall</h1>
+</header>
+
+<div class="grid">
+  <div class="card" id="stats-card">
+    <h2>Memory Stats</h2>
+    <div class="loading">Loading...</div>
+  </div>
+  <div class="card">
+    <h2>Search</h2>
+    <input type="text" id="search-input" placeholder="Search memories..." autofocus>
+    <div id="memory-list">
+      <div class="empty">Type to search or wait for memories to appear.</div>
+    </div>
+  </div>
+</div>
+
+<script>
+const $ = (sel) => document.querySelector(sel);
+
+let annaReady = false;
+
+async function invokeAnna(tool, args = {}) {
+  if (!window.anna || !window.anna.tools) {
+    console.warn('Anna SDK not available');
+    return null;
+  }
+  try {
+    const resp = await window.anna.tools.invoke('tool-dev-mimir-memory', tool, args);
+    console.log('invoke response:', tool, resp);
+    if (resp && resp.success) return resp.data;
+    return null;
+  } catch (e) {
+    console.error('invoke error:', tool, e);
+    return null;
+  }
+}
+
+function parseOutput(data) {
+  if (!data) return null;
+  if (typeof data.output === 'string') {
+    try { return JSON.parse(data.output); } catch {}
+    return data.output;
+  }
+  return data.output || data.raw || data;
+}
+
+async function loadStats() {
+  const card = $('#stats-card');
+  const data = await invokeAnna('stats');
+  if (!data) {
+    card.innerHTML = '<h2>Memory Stats</h2><div class="error">Could not load stats. Is Recall installed?</div>';
+    return;
+  }
+  const parsed = parseOutput(data);
+  let count = '—';
+  let size = '—';
+  let categories = '—';
+  if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) {
+    count = parsed.entity_count || parsed.entities || '—';
+    size = parsed.db_size || parsed.size || '—';
+    categories = parsed.categories || '—';
+  } else if (typeof parsed === 'string') {
+    // try to extract numbers from text
+    const matchCount = parsed.match(/(\d+)\s*(?:memor|entit)/i);
+    if (matchCount) count = matchCount[1];
+  }
+  card.innerHTML = `
+    <h2>Memory Stats</h2>
+    <div class="stat-row">
+      <div class="stat"><div class="value">${count}</div><div class="label">Memories</div></div>
+      <div class="stat"><div class="value">${typeof categories === 'number' ? categories : '—'}</div><div class="label">Categories</div></div>
+      <div class="stat"><div class="value">${size}</div><div class="label">DB Size</div></div>
+    </div>
+  `;
+}
+
+async function searchMemories(query) {
+  const list = $('#memory-list');
+  if (!query || query.length < 1) {
+    list.innerHTML = '<div class="empty">Type to search memories.</div>';
+    return;
+  }
+  list.innerHTML = '<div class="loading">Searching...</div>';
+  const data = await invokeAnna('recall', { query, limit: 20 });
+  if (!data) {
+    list.innerHTML = '<div class="error">Search failed. Try again.</div>';
+    return;
+  }
+  const parsed = parseOutput(data);
+  let results = [];
+  if (Array.isArray(parsed)) {
+    results = parsed;
+  } else if (parsed && parsed.results) {
+    results = parsed.results;
+  } else if (parsed && parsed.memories) {
+    results = parsed.memories;
+  } else if (parsed && parsed.entities) {
+    results = parsed.entities;
+  } else if (typeof parsed === 'string') {
+    // If it's a markdown/text response, show it as a single block
+    list.innerHTML = `<div class="memory-item"><div class="fact" style="white-space:pre-wrap;font-family:monospace;font-size:12px;">${escapeHTML(parsed)}</div></div>`;
+    return;
+  }
+
+  if (!results || results.length === 0) {
+    list.innerHTML = '<div class="empty">No memories found. Try a different search.</div>';
+    return;
+  }
+
+  list.innerHTML = results.map((m, i) => {
+    const fact = m.fact || m.content || m.body || (m.body_json ? (() => { try { return JSON.parse(m.body_json).fact; } catch { return m.body_json; } })() : '') || JSON.stringify(m).slice(0, 100);
+    const cat = (m.category || 'insight').toLowerCase();
+    const key = m.key || m.id || '';
+    const dec = m.decay_score ? ` · decay ${(m.decay_score*100).toFixed(0)}%` : '';
+    return `
+      <div class="memory-item" style="animation-delay:${i*0.04}s">
+        <span class="category ${cat}">${cat}</span>
+        <span style="font-size:11px;color:var(--text-dim)">${escapeHTML(key)}</span>
+        <div class="fact">${escapeHTML(fact)}</div>
+        <div class="meta">${m.type || 'insight'}${dec}</div>
+      </div>
+    `;
+  }).join('');
+}
+
+function escapeHTML(str) {
+  const div = document.createElement('div');
+  div.textContent = str;
+  return div.innerHTML;
+}
+
+// Debounced search
+let searchTimer;
+$('#search-input').addEventListener('input', () => {
+  clearTimeout(searchTimer);
+  searchTimer = setTimeout(() => searchMemories($('#search-input').value), 300);
+});
+
+// Initial load
+async function init() {
+  // Wait for Anna SDK
+  if (window.anna && window.anna.window) {
+    try { await window.anna.window.ready(); } catch {}
+  }
+
+  loadStats();
+
+  // Also load context on init
+  const data = await invokeAnna('context', { limit: 10 });
+  if (data) {
+    const parsed = parseOutput(data);
+    if (parsed) {
+      $('#memory-list').innerHTML = '<div class="empty">Recent context loaded. Search above to explore.</div>';
+    }
+  }
+
+  // Reload stats every 30s
+  setInterval(loadStats, 30000);
+}
+
+// Wait for Anna SDK to be available
+function waitForAnna() {
+  if (window.anna && window.anna.tools) {
+    init();
+  } else {
+    setTimeout(waitForAnna, 100);
+  }
+}
+waitForAnna();
+</script>
+</body>
+</html>
