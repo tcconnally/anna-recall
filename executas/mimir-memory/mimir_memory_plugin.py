@@ -197,7 +197,7 @@ def _start_mimir():
         [MIMIR_BIN, "serve", "--db", MIMIR_DB],
         stdin=subprocess.PIPE,
         stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
+        stderr=subprocess.DEVNULL,
         text=True,
     )
     _mcp_counter = 1
@@ -219,9 +219,23 @@ def _start_mimir():
     _mimir_proc.stdin.flush()
 
 
-def _mcp_send(method, params=None):
-    """Send an MCP request to mimir and return the result."""
+def _mcp_send(method, params=None, timeout=30):
+    """Send an MCP request to mimir and return the result.
+
+    If mimir has died, attempts one restart before raising.
+    Reads with a deadline so a stuck mimir doesn't hang the plugin forever.
+    """
     global _mcp_counter
+
+    # Restart if mimir is dead or was never started (A-2)
+    if _mimir_proc is None or _mimir_proc.poll() is not None:
+        try:
+            _start_mimir()
+        except Exception as e:
+            raise RuntimeError(
+                f"Memory backend unavailable — mimir could not be started: {e}"
+            ) from e
+
     req_id = _mcp_counter
     _mcp_counter += 1
 
@@ -234,9 +248,27 @@ def _mcp_send(method, params=None):
 
     # Read responses until we find the one matching our request id.
     # MCP servers may send notifications (no id) between responses.
+    start = __import__("time").time()
     while True:
+        elapsed = __import__("time").time() - start
+        if elapsed > timeout:
+            raise RuntimeError(
+                f"mimir request timed out after {timeout}s (method={method})"
+            )
+
         line = _mimir_proc.stdout.readline()
         if not line:
+            # Process exited — attempt one restart
+            if _mimir_proc.poll() is not None:
+                try:
+                    _start_mimir()
+                    raise RuntimeError(
+                        "mimir process exited and was restarted; please retry"
+                    )
+                except Exception as e:
+                    raise RuntimeError(
+                        f"mimir process exited and restart failed: {e}"
+                    ) from e
             raise RuntimeError("mimir process exited unexpectedly")
         try:
             resp = json.loads(line.strip())
@@ -301,7 +333,12 @@ TOOL_MAP = {
 
 
 def _make_key(fact: str, max_len: int = 50) -> str:
-    """Generate a key from a fact string."""
+    """Generate a unique key from a fact string.
+
+    Uses a content hash suffix to prevent silent collision/overwrite
+    when two facts share the same normalized prefix.
+    """
+    import hashlib
     import re
 
     key = fact.lower().strip()
@@ -309,7 +346,9 @@ def _make_key(fact: str, max_len: int = 50) -> str:
     key = re.sub(r"\s+", "-", key)
     if len(key) > max_len:
         key = key[:max_len].rsplit("-", 1)[0]
-    return key or "untitled"
+    # Append short content hash to prevent collisions (A-4)
+    content_hash = hashlib.sha1(fact.encode()).hexdigest()[:6]
+    return f"{key}-{content_hash}" if key else f"untitled-{content_hash}"
 
 
 # ── Request handler ────────────────────────────────────────────────────────
@@ -399,8 +438,8 @@ def main():
     try:
         _start_mimir()
     except Exception as e:
-        # If mimir fails to start, we can still serve describe but
-        # invoke calls will fail gracefully with clear errors.
+        # Startup failure is non-fatal — _mcp_send will attempt a lazy
+        # restart on the first invoke call (A-2).
         print(f"[recall] WARNING: mimir startup failed: {e}", file=sys.stderr)
 
     for line in sys.stdin:
