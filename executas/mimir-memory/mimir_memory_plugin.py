@@ -9,10 +9,14 @@ Protocol: Executa (described) over stdin/stdout — JSON-RPC 2.0, line-delimited
 Supports: describe, invoke, health.
 """
 
+import hashlib
 import json
 import os
+import queue
 import subprocess
 import sys
+import threading
+import time
 
 
 # ── Configuration ──────────────────────────────────────────────────────────
@@ -21,6 +25,18 @@ MIMIR_BIN = os.environ.get("MIMIR_BIN", "mimir")
 MIMIR_DB = os.environ.get(
     "MIMIR_DB", os.path.join(os.path.expanduser("~"), ".anna", "recall.db")
 )
+
+
+def _mcp_timeout_s() -> float:
+    """Read timeout for a single MCP round-trip (env-overridable per call)."""
+    try:
+        return float(os.environ.get("RECALL_MCP_TIMEOUT", "30"))
+    except ValueError:
+        return 30.0
+
+
+class MemoryUnavailableError(RuntimeError):
+    """Raised when the Mimir backend is down and could not be restarted."""
 
 
 # ── Manifest ───────────────────────────────────────────────────────────────
@@ -185,11 +201,28 @@ MANIFEST = {
 
 _mimir_proc = None
 _mcp_counter = 1
+_stdout_queue = None  # queue.Queue fed by the reader thread; None sentinel = EOF
+
+
+def _drain_stdout(proc, out_queue):
+    """Reader thread: forward mimir stdout lines into a queue.
+
+    Decouples reads from the request loop so _mcp_send can enforce a
+    deadline (a blocking readline cannot be interrupted portably), and
+    guarantees the pipe is always drained. Puts None on EOF so waiters
+    learn the process died instead of blocking forever.
+    """
+    try:
+        for line in proc.stdout:
+            out_queue.put(line)
+    except (OSError, ValueError):
+        pass  # pipe closed mid-read — treated the same as EOF
+    out_queue.put(None)
 
 
 def _start_mimir():
     """Spawn mimir as a persistent subprocess and complete the MCP handshake."""
-    global _mimir_proc, _mcp_counter
+    global _mimir_proc, _mcp_counter, _stdout_queue
 
     os.makedirs(os.path.dirname(MIMIR_DB) or ".", exist_ok=True)
 
@@ -197,12 +230,19 @@ def _start_mimir():
         [MIMIR_BIN, "serve", "--db", MIMIR_DB],
         stdin=subprocess.PIPE,
         stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
+        # DEVNULL, never PIPE: an undrained stderr pipe fills up and
+        # deadlocks mimir once it blocks on the next stderr write.
+        stderr=subprocess.DEVNULL,
         text=True,
     )
     _mcp_counter = 1
+    _stdout_queue = queue.Queue()
+    threading.Thread(
+        target=_drain_stdout, args=(_mimir_proc, _stdout_queue), daemon=True
+    ).start()
 
-    # MCP initialize handshake
+    # MCP initialize handshake. No restart-on-failure here: if the process
+    # we just spawned can't complete the handshake, restarting would loop.
     _mcp_send(
         "initialize",
         {
@@ -210,6 +250,7 @@ def _start_mimir():
             "capabilities": {},
             "clientInfo": {"name": "anna-recall", "version": "1.0.0"},
         },
+        allow_restart=False,
     )
 
     # Send 'initialized' notification (no id, no response expected)
@@ -219,9 +260,38 @@ def _start_mimir():
     _mimir_proc.stdin.flush()
 
 
-def _mcp_send(method, params=None):
-    """Send an MCP request to mimir and return the result."""
+def _mimir_alive():
+    return _mimir_proc is not None and _mimir_proc.poll() is None
+
+
+def _ensure_mimir(allow_restart=True):
+    """Make sure mimir is running, attempting one restart if it died."""
+    if _mimir_alive():
+        return
+    if not allow_restart:
+        raise MemoryUnavailableError(
+            "Memory backend unavailable — mimir is not running"
+        )
+    try:
+        _start_mimir()
+    except MemoryUnavailableError:
+        raise
+    except Exception as e:
+        raise MemoryUnavailableError(
+            f"Memory backend unavailable — mimir restart failed: {e}"
+        ) from e
+
+
+def _mcp_send(method, params=None, allow_restart=True):
+    """Send an MCP request to mimir and return the result.
+
+    Restarts mimir once if it died since the last call; raises
+    MemoryUnavailableError (never hangs) if the backend stays down or a
+    response doesn't arrive within the configured timeout.
+    """
     global _mcp_counter
+    _ensure_mimir(allow_restart=allow_restart)
+
     req_id = _mcp_counter
     _mcp_counter += 1
 
@@ -229,15 +299,32 @@ def _mcp_send(method, params=None):
     if params:
         req["params"] = params
 
-    _mimir_proc.stdin.write(json.dumps(req) + "\n")
-    _mimir_proc.stdin.flush()
+    try:
+        _mimir_proc.stdin.write(json.dumps(req) + "\n")
+        _mimir_proc.stdin.flush()
+    except (BrokenPipeError, OSError) as e:
+        raise MemoryUnavailableError(
+            f"Memory backend unavailable — mimir pipe closed: {e}"
+        ) from e
 
     # Read responses until we find the one matching our request id.
     # MCP servers may send notifications (no id) between responses.
+    deadline = time.monotonic() + _mcp_timeout_s()
     while True:
-        line = _mimir_proc.stdout.readline()
-        if not line:
-            raise RuntimeError("mimir process exited unexpectedly")
+        remaining = deadline - time.monotonic()
+        if remaining <= 0:
+            raise MemoryUnavailableError(
+                f"Memory backend unavailable — mimir did not respond to "
+                f"'{method}' within {_mcp_timeout_s():.0f}s"
+            )
+        try:
+            line = _stdout_queue.get(timeout=remaining)
+        except queue.Empty:
+            continue  # loop re-checks the deadline
+        if line is None:
+            raise MemoryUnavailableError(
+                "Memory backend unavailable — mimir process exited unexpectedly"
+            )
         try:
             resp = json.loads(line.strip())
         except json.JSONDecodeError:
@@ -301,15 +388,23 @@ TOOL_MAP = {
 
 
 def _make_key(fact: str, max_len: int = 50) -> str:
-    """Generate a key from a fact string."""
+    """Generate a key from a fact string.
+
+    Ends with a short content hash so two distinct facts that share a
+    prefix don't collide on the same key — mimir treats (category, key)
+    as identity and an unsuffixed collision silently overwrites the
+    earlier fact.
+    """
     import re
 
+    digest = hashlib.sha256(fact.encode("utf-8")).hexdigest()[:8]
     key = fact.lower().strip()
     key = re.sub(r"[^a-z0-9\s-]", "", key)
     key = re.sub(r"\s+", "-", key)
     if len(key) > max_len:
         key = key[:max_len].rsplit("-", 1)[0]
-    return key or "untitled"
+    key = key.strip("-") or "untitled"
+    return f"{key}-{digest}"
 
 
 # ── Request handler ────────────────────────────────────────────────────────
@@ -376,6 +471,14 @@ def handle(req: dict) -> dict:
                 },
             }
 
+        except MemoryUnavailableError as e:
+            # Backend down and restart failed — tell the agent plainly so it
+            # can answer without memory instead of presenting a stack trace.
+            return {
+                "jsonrpc": "2.0",
+                "id": req_id,
+                "error": {"code": -32603, "message": str(e)},
+            }
         except Exception as e:
             return {
                 "jsonrpc": "2.0",
@@ -426,8 +529,11 @@ def main():
 
     # Clean shutdown
     if _mimir_proc and _mimir_proc.poll() is None:
-        _mimir_proc.stdin.close()
-        _mimir_proc.wait(timeout=5)
+        try:
+            _mimir_proc.stdin.close()
+            _mimir_proc.wait(timeout=5)
+        except (subprocess.TimeoutExpired, OSError):
+            _mimir_proc.kill()
 
 
 if __name__ == "__main__":
