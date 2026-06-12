@@ -502,8 +502,8 @@ def main():
     try:
         _start_mimir()
     except Exception as e:
-        # If mimir fails to start, we can still serve describe but
-        # invoke calls will fail gracefully with clear errors.
+        # Startup failure is non-fatal — _mcp_send will attempt a lazy
+        # restart on the first invoke call (A-2).
         print(f"[recall] WARNING: mimir startup failed: {e}", file=sys.stderr)
 
     for line in sys.stdin:
