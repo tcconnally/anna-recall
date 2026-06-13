@@ -1,8 +1,7 @@
 ---
-name: recall-memory-hygiene
-description: "How the Anna agent should use Recall memory — when to remember, what to store, how to recall."
-version: "1.0.0"
-category: memory
+name: memory-hygiene
+description: "How to use persistent memory effectively — when to remember, what to store, and how to recall the right context at the right time."
+metadata: {"matrix":{"emoji":"🧠","execution_mode":"prompt","category_name":"productivity"}}
 ---
 
 # Recall — Memory Hygiene for Anna

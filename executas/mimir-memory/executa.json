@@ -1,0 +1,9 @@
+{
+  "slug": "mimir-memory",
+  "name": "mimir-memory",
+  "version": "1.0.0",
+  "executa_type": "tool",
+  "description": "Persistent memory for Anna — remember, recall, forget, context, stats, health. Backed by Mimir (SQLite + FTS5).",
+  "tool_id": "tool-dev-mimir-memory",
+  "type": "python"
+}
