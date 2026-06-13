@@ -59,24 +59,38 @@ MANIFEST = {
         {
             "name": "remember",
             "description": (
-                "Store something worth remembering. Use after the user shares "
-                "a preference, makes a decision, describes their setup, or gives "
-                "any information likely to matter later. "
-                "Be specific — a crisp fact is more useful than a vague summary."
+                "Store a fact in persistent memory so it survives across conversations. "
+                "CALL THIS when the user explicitly shares something important: "
+                "a preference ('I prefer tabs'), a tool choice ('we use pytest'), "
+                "a deployment detail ('deployed to Fly.io'), a name, a project name, "
+                "or a decision they made. "
+                "ALSO CALL when you learn something the hard way that will save time later "
+                "(a bug fix, a config trick, a gotcha). "
+                "DO NOT call for small talk, transient queries, or anything the user "
+                "would not expect you to remember next week. "
+                "If unsure, remember it — better to store and clean up later than to forget."
             ),
             "parameters": [
                 {
                     "name": "fact",
                     "type": "string",
-                    "description": "The specific fact or information to store.",
+                    "description": (
+                        "The specific information to store. Write it as a self-contained "
+                        "sentence someone could read months later and understand. "
+                        "BAD: 'user likes Docker'. GOOD: 'User deploys to Fly.io using "
+                        "Docker, app listens on port 8080, multi-region enabled.'"
+                    ),
                     "required": True,
                 },
                 {
                     "name": "category",
                     "type": "string",
                     "description": (
-                        "Category: preference, decision, project, person, "
-                        "setup, insight, reference, or custom."
+                        "What kind of memory: 'preference' (likes/dislikes, workflow), "
+                        "'decision' (architecture, tool choices), 'project' (repo names, "
+                        "structure), 'person' (name, role, relationship), 'setup' "
+                        "(environment, paths, config), 'insight' (lessons, discoveries), "
+                        "or 'reference' (URLs, doc links)."
                     ),
                     "enum": [
                         "preference",
@@ -93,9 +107,9 @@ MANIFEST = {
                     "name": "key",
                     "type": "string",
                     "description": (
-                        "Short unique key summarizing the fact "
-                        "(e.g. 'uses-neovim', 'deploy-target-aws'). "
-                        "Auto-generated if omitted."
+                        "Short unique label for this fact (e.g. 'uses-neovim', "
+                        "'deploy-target-flyio', 'python-version'). Auto-generated "
+                        "from the fact text if you omit it."
                     ),
                     "required": False,
                 },
@@ -103,13 +117,21 @@ MANIFEST = {
                     "name": "tags",
                     "type": "array",
                     "items": {"type": "string"},
-                    "description": "Tags for grouping (e.g. ['python', 'devops']).",
+                    "description": (
+                        "Keywords that will help find this later. Include language, "
+                        "framework, domain, tool name. E.g. ['python', 'docker', "
+                        "'fly.io', 'deployment']."
+                    ),
                     "required": False,
                 },
                 {
                     "name": "importance",
                     "type": "number",
-                    "description": "How important this is, 0.0–1.0. Default 0.7.",
+                    "description": (
+                        "How critical this is to remember. 1.0 = essential (user's "
+                        "name, auth method, core project). 0.5 = nice to know. "
+                        "Default 0.7 is right for most facts."
+                    ),
                     "required": False,
                     "default": 0.7,
                 },
@@ -118,29 +140,42 @@ MANIFEST = {
         {
             "name": "recall",
             "description": (
-                "Search memory for relevant facts. Call this BEFORE answering "
-                "a question where past context would help — the user's name, "
-                "preferences, previous decisions, project details, etc. "
-                "Returns matches ranked by relevance."
+                "Search everything you have stored in memory. "
+                "CALL THIS at the START of every conversation — before you answer "
+                "the user's first question, search for their name, their current "
+                "project, and any topic keywords in their message. "
+                "ALSO CALL when the user asks something you might already know "
+                "('what testing framework do I use?', 'what's my deploy setup?'). "
+                "Searching first prevents the user from repeating themselves. "
+                "Use broad queries ('docker deploy', 'python testing') rather "
+                "than exact phrases — the search engine handles fuzzy matching."
             ),
             "parameters": [
                 {
                     "name": "query",
                     "type": "string",
-                    "description": "What to search for — keywords, topic, question.",
+                    "description": (
+                        "Keywords to search for. Can be a topic ('python deployment'), "
+                        "a question fragment ('how do I deploy'), or a person's name. "
+                        "Multi-word queries OR the words together — 'docker fly.io' "
+                        "matches memories about either."
+                    ),
                     "required": True,
                 },
                 {
                     "name": "limit",
                     "type": "integer",
-                    "description": "Maximum results to return (default 10).",
+                    "description": "How many results to return. Use 5 for quick checks, 20 for deep searches.",
                     "required": False,
                     "default": 10,
                 },
                 {
                     "name": "category",
                     "type": "string",
-                    "description": "Filter by category (e.g. 'preference').",
+                    "description": (
+                        "Narrow results to one category: 'preference', 'decision', "
+                        "'project', 'person', 'setup', 'insight', 'reference'."
+                    ),
                     "required": False,
                 },
             ],
@@ -148,20 +183,31 @@ MANIFEST = {
         {
             "name": "forget",
             "description": (
-                "Soft-delete a memory (recoverable). Use when the user "
-                "corrects outdated info or asks you to forget something."
+                "Remove an outdated memory (soft-delete, recoverable). "
+                "CALL THIS when the user corrects something you previously remembered. "
+                "Examples: 'I don't use Docker anymore, I switched to Kubernetes', "
+                "'Actually my name is Thomas, not Tom', 'That deploy target is wrong.' "
+                "Always call remember() with the corrected fact right after calling forget(). "
+                "The user should not have to repeat a correction in the next conversation."
             ),
             "parameters": [
                 {
                     "name": "category",
                     "type": "string",
-                    "description": "Category of the memory to forget.",
+                    "description": (
+                        "The category of the outdated memory (e.g. 'setup', 'preference'). "
+                        "Must match exactly what was used when the memory was stored."
+                    ),
                     "required": True,
                 },
                 {
                     "name": "key",
                     "type": "string",
-                    "description": "Key of the memory to forget.",
+                    "description": (
+                        "The key of the outdated memory (e.g. 'deploy-target-flyio'). "
+                        "Find this by calling recall() first to locate the memory, "
+                        "then pass its key here."
+                    ),
                     "required": True,
                 },
             ],
@@ -169,15 +215,24 @@ MANIFEST = {
         {
             "name": "context",
             "description": (
-                "Get a formatted markdown block of the most important/recent "
-                "memories for session injection. Call this at the start of "
-                "a conversation to load relevant context."
+                "Load a formatted summary of the most important and recent memories, "
+                "ready to inject into the current conversation. "
+                "CALL THIS at the START of every conversation as a quick alternative "
+                "to targeted recall() searches — it gives you the top N memories "
+                "across all categories in one call. "
+                "Useful when you don't know what to search for yet, or when the user "
+                "says something open-ended like 'help me with my project.' "
+                "Combine with recall() for best results: context() gives the overview, "
+                "recall() drills into specifics."
             ),
             "parameters": [
                 {
                     "name": "limit",
                     "type": "integer",
-                    "description": "Maximum memories to include (default 10).",
+                    "description": (
+                        "How many top memories to include. Use 10 for a broad overview, "
+                        "5 for a quick session start."
+                    ),
                     "required": False,
                     "default": 10,
                 }
@@ -185,12 +240,23 @@ MANIFEST = {
         },
         {
             "name": "stats",
-            "description": "Get memory database statistics — count, categories, size.",
+            "description": (
+                "Return memory database statistics: total memories stored, breakdown "
+                "by category and type, database file size. "
+                "CALL THIS when the user asks how much you remember, wants to see "
+                "what kinds of things are stored, or asks about memory health. "
+                "Also useful during debugging to confirm memories are being saved."
+            ),
             "parameters": [],
         },
         {
             "name": "health",
-            "description": "Check if the memory system is healthy and reachable.",
+            "description": (
+                "Quick liveness check — verifies the memory backend is reachable "
+                "and responding. CALL THIS if a previous memory tool call failed "
+                "or returned an error, to determine whether the backend is down "
+                "or the specific operation was the problem."
+            ),
             "parameters": [],
         },
     ],
@@ -202,6 +268,20 @@ MANIFEST = {
 _mimir_proc = None
 _mcp_counter = 1
 _stdout_queue = None  # queue.Queue fed by the reader thread; None sentinel = EOF
+
+# Per-tool invoke timeout (seconds) for mimir MCP calls.
+_MCP_INVOKE_TIMEOUT = 20
+# Handshake (initialize) gets a slightly longer leash on cold start.
+_MCP_INIT_TIMEOUT = 10
+
+
+class MemoryUnavailableError(RuntimeError):
+    """Raised when the mimir backend is unreachable or times out."""
+
+
+def _mcp_timeout_s():
+    """Return the MCP call timeout in seconds."""
+    return _MCP_INVOKE_TIMEOUT
 
 
 def _drain_stdout(proc, out_queue):
