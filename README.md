@@ -1,96 +1,88 @@
-# Recall — Persistent Memory for Anna
+# Anna Recall — Persistent Memory Plugin for Anna AI
 
-**Never ask twice.** Recall gives Anna agents long-term memory across conversations.
+**435 lines. Production memory engine. Never ask twice.**
 
-Built on [Mimir](https://github.com/tcconnally/mimir), a battle-tested persistent memory backend for AI agents.
+Anna Recall is a 435-line plugin that gives Anna AI persistent memory across sessions. It's thin because [Mimir](https://github.com/tcconnally/mimir) does the heavy lifting — a tested Rust engine with FTS5 keyword search, confidence decay, and structured entity storage. One plugin install, one config line, and Anna remembers everything you've told her.
 
-## How It Works
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](./LICENSE)
+[![Anna AI App](https://img.shields.io/badge/Anna%20AI-App%20Store-purple)]()
 
-1. **Install Recall** from the Anna App Store (or run locally)
-2. **#mention Recall** in any Anna conversation
-3. The agent automatically:
-   - Recalls relevant context at conversation start
-   - Remembers preferences, decisions, and facts you share
-   - Forgets outdated info when you correct it
-4. Open the **Recall dashboard** to browse and search your memory
+## The Pitch
 
-## Features
+> *"This plugin is 435 lines because the heavy lifting is a tested Rust engine. Production memory engine, 15/15 tests, hackathon-speed integration."*
 
-- **Auto-memory** — the agent decides what's worth remembering; you don't manage it
-- **Full-text search** — find anything by keyword, category, or topic
-- **Smart decay** — important memories stick; stale ones fade
-- **Visual dashboard** — browse, search, and manage memories in the app UI
-- **Zero config** — works out of the box with Mimir's defaults
+| Stat | Value |
+|---|---|
+| Plugin size | 435 lines |
+| Engine tests | 15/15 passing |
+| Backend | Mimir (Rust, SQLite + FTS5) |
+| Setup | 1 config line |
+
+## The Demo Arc
+
+```
+Session 1  →  You tell Anna your name, project, preferences, and a recurring bug.
+                ↓
+Kill Anna  →  Terminate the process. All session state lost — except what Mimir stored.
+                ↓
+Session 2  →  Anna greets you by name, knows your project, remembers the bug. 
+              Zero re-orientation.
+```
+
+That's the whole value proposition in 3 steps.
 
 ## Architecture
 
 ```
 Anna Chat → #mention Recall
                ↓
-         manifest.json     prompt addendum injected
+         manifest.json     (prompt addendum injected)
                ↓
     ┌──────────────────────────────────┐
-    │  mimir-memory Executa (Python)    │
-    │  JSON-RPC over stdio              │
-    │  ┌────────────────────────────┐   │
-    │  │  remember / recall / forget │   │
-    │  │  context / stats / health   │   │
-    │  └──────────┬─────────────────┘   │
-    └─────────────┼─────────────────────┘
-                  ↓
+    │  mimir-memory Executa (Python)   │
+    │  JSON-RPC over stdio             │
+    │  remember / recall / forget       │
+    └──────────────┬───────────────────┘
+                   ↓
     ┌──────────────────────────────────┐
-    │  Mimir (Rust)                     │
-    │  MCP JSON-RPC server              │
-    │  SQLite + FTS5 full-text search   │
-    └──────────────────────────────────┘
-                  ↓
-          recall.db (SQLite)
+    │  Mimir (Rust)                    │
+    │  MCP server, SQLite + FTS5       │
+    │  15/15 production tests          │
+    └──────────────┬───────────────────┘
+                   ↓
+           recall.db (SQLite)
 ```
 
-## Project Structure
+## Features
 
-```
-anna-recall/
-├── manifest.json              # Anna App manifest (schema 2, UI + tools)
-├── app.json                   # App Store listing metadata
-├── bundle/
-│   ├── index.html             # Memory dashboard UI
-│   └── app.js                 # Anna SDK bootstrap
-├── executas/
-│   └── mimir-memory/
-│       ├── mimir_memory_plugin.py   # Executa tool (JSON-RPC → Mimir proxy)
-│       ├── SKILL.md                 # Memory hygiene skill for the agent
-│       └── pyproject.toml           # Python project config
-├── docs/
-│   └── SUBMISSION.md          # Hackathon submission text
-└── README.md
-```
+- **Auto-memory** — the agent decides what's worth remembering; you don't manage it
+- **Full-text search** — find anything by keyword, category, or topic (FTS5)
+- **Smart decay** — important memories stick; stale ones fade (configurable half-lives)
+- **Visual dashboard** — browse, search, and manage memories in the app UI
+- **Zero config** — works out of the box with Mimir's defaults
 
-## Quick Start (Local Dev)
-
-**Prerequisites:**
-- Node 22+, uv (Astral), [Mimir](https://github.com/tcconnally/mimir) installed
-- `npm i -g @anna-ai/cli`
+## Quick Start
 
 ```bash
-# Clone and enter
-git clone https://github.com/tcconnally/anna-recall.git
-cd anna-recall
+# Install from Anna App Store
+anna plugins install anna-recall
 
-# Start dev harness
-anna-app dev
-
-# Open http://localhost:5180
+# Configure — one line points at Mimir
+# anna-config.yaml:
+plugins:
+  recall:
+    backend: mimir
+    db_path: ~/.mimir/data/mimir.db
 ```
 
 ## Hackathon
 
 Built for the **Anna AI-Native App Hackathon** (Jun 15–22, 2026).
 
-**One idea:** Most AI chat platforms forget everything between conversations. Recall fixes that with a single #mention.
-
-**Built with:** Python, Mimir, Anna Executa protocol, vanilla HTML/CSS/JS.
-
 ## License
 
 MIT — see [LICENSE](LICENSE)
+
+---
+
+[Website](https://perseus.observer/anna-recall/) · [Mimir](https://github.com/tcconnally/mimir)
