@@ -1,13 +1,10 @@
 [project]
-name = "mimir-memory"
-version = "1.0.0"
-description = "Recall — persistent memory Executa plugin for Anna"
+name = "mimir-memory-plugin"
+version = "0.1.0"
+description = "Anna AI memory plugin backed by Mimir"
 requires-python = ">=3.10"
-dependencies = []
+dependencies = ["httpx>=0.28"]
 
-[project.scripts]
-mimir-memory = "mimir_memory_plugin:main"
-
-[tool.executa]
-entrypoint = "mimir_memory_plugin.py"
-runtime = "python"
+[build-system]
+requires = ["setuptools>=75"]
+build-backend = "setuptools.build_meta"
