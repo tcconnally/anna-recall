@@ -33,7 +33,7 @@
       }
     ],
     "host_api": {
-      "tools": ["required:bundled:tool-perseus-mimir-memory-2gtynted"],
+      "tools": ["tool-perseus-mimir-memory-2gtynted"],
       "storage": ["get", "set"],
       "window": ["set_title"],
       "chat": ["write_message"],
