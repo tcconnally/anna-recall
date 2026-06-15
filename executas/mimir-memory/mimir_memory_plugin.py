@@ -21,7 +21,29 @@ import time
 
 # ── Configuration ──────────────────────────────────────────────────────────
 
-MIMIR_BIN = os.environ.get("MIMIR_BIN", "mimir")
+# When bundled with PyInstaller, mimir lives alongside the executable.
+# sys._MEIPASS is the temp directory where PyInstaller extracts bundled files.
+def _find_mimir():
+    """Locate the mimir binary: bundled copy first, then env var, then PATH."""
+    # 1) Bundled with PyInstaller
+    try:
+        _base = sys._MEIPASS  # set at runtime by PyInstaller
+        bundled = os.path.join(_base, "mimir")
+        if os.path.isfile(bundled) and os.access(bundled, os.X_OK):
+            return bundled
+    except AttributeError:
+        pass  # not running under PyInstaller
+
+    # 2) Explicit env var
+    env_bin = os.environ.get("MIMIR_BIN")
+    if env_bin:
+        return env_bin
+
+    # 3) Fall back to PATH
+    return "mimir"
+
+
+MIMIR_BIN = _find_mimir()
 MIMIR_DB = os.environ.get(
     "MIMIR_DB", os.path.join(os.path.expanduser("~"), ".anna", "recall.db")
 )
