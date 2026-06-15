@@ -130,7 +130,7 @@ async function invokeAnna(tool, args = {}) {
     return null;
   }
   try {
-    const resp = await window.anna.tools.invoke('tool-dev-mimir-memory', tool, args);
+    const resp = await window.anna.tools.invoke('tool-perseus-mimir-memory-2gtynted', tool, args);
     console.log('invoke response:', tool, resp);
     if (resp && resp.success) return resp.data;
     return null;

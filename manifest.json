@@ -1,7 +1,7 @@
 {
   "schema": 2,
   "required_executas": [
-    { "tool_id": "tool-dev-mimir-memory" }
+    { "tool_id": "tool-perseus-mimir-memory-2gtynted" }
   ],
   "optional_executas": [],
   "permissions": [
@@ -21,7 +21,7 @@
       }
     },
     "host_api": {
-      "tools": ["tool-dev-mimir-memory"],
+      "tools": ["tool-perseus-mimir-memory-2gtynted"],
       "storage": ["set", "get"],
       "window": ["set_title", "ready"]
     }
