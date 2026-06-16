@@ -1,108 +1,89 @@
-# Recall Demo Script — 90 Seconds
+# Recall Demo Script — "Before & After" (90 seconds)
 
-## Screen layout during recording
-
-- Full screen, 1920x1080
-- Split: Anna chat on left 55%, Recall dashboard on right 45%
-- Dark mode throughout
-- Cursor visible, move deliberately
-- No music, clean voiceover
+## Structure
+- 0:00-0:15 — THE FRUSTRATION (Before)
+- 0:15-0:40 — THE MAGIC (After, conversation 1)
+- 0:40-0:70 — THE PAYOFF (After, conversation 2)
+- 0:70-0:90 — THE DASHBOARD + Outro
 
 ---
 
-## 0:00-0:10 — The Problem
+## 0:00-0:15 — THE FRUSTRATION
 
-**Show:** Anna chat window, empty new conversation
+**Show:** Anna chat, blank conversation. No `#recall` mention.
 
-**Say:** "AI agents are great. But every time you start a new conversation, you start from zero. They don't remember your name, your preferences, or what you decided last time."
+**Type:** "Hey, what testing framework should I use for my Python project?"
 
----
+**Anna responds:** Generic advice — "You should consider pytest or unittest, depending on your needs..."
 
-## 0:10-0:25 — One Click Install
-
-**Show:** Type `#recall` in the Anna chat input, hit enter. The Recall app activates.
-
-**Say:** "Recall fixes that. It's an Anna app that gives your agent persistent memory. Install once, mention it in any conversation, and your agent remembers."
-
-**Show:** The "Recall installed" confirmation or system message. The agent responds with a greeting acknowledging it has memory access.
+**Say:** "This is every AI chat today. It doesn't know me. It doesn't know I've been using pytest for years. Every conversation starts from zero."
 
 ---
 
-## 0:25-0:55 — Memory In Action (Conversation 1)
+## 0:15-0:40 — ONE MENTION CHANGES EVERYTHING
 
-**Show:** Type the following messages, one at a time. Let the agent respond naturally to each.
+**Show:** Type `#recall` then the message.
 
-**Type:** "Hey, a few things about me: my name is Thomas. I build AI tools — I'm working on a project called Perseus that injects context into LLM prompts. I deploy everything to Fly.io with Docker. Oh, and I strongly prefer pytest over unittest, with xdist for parallel tests."
+**Type:** "#recall Hey, a few things about me: my name is Thomas. I'm building an AI tool called Perseus. I deploy to Fly.io with Docker. And I strongly prefer pytest over unittest — I use xdist for parallel tests."
 
-**Show:** The agent responds, calling `remember()` multiple times in the background. (If Anna shows tool calls, let them be visible briefly.)
+**Anna responds:** "Got it Thomas — I'll remember that. You're working on Perseus, deploying to Fly.io with Docker, and you use pytest with xdist. Let me know what you need."
 
-**Say:** "The agent automatically identifies what's worth remembering — my name, my project, my deployment setup, my testing preferences. I didn't ask it to remember anything. It just knows what matters."
+**Show:** The dashboard in split view. The stats counter ticks up. The "Just saved" indicator pulses green.
 
-**Show:** Hover over or highlight the tool calls if visible. Type next message.
-
-**Type:** "Actually I forgot — I also use uv for Python package management, not pip."
-
-**Say:** "It even handles corrections. The agent updates what it knows without me having to manage anything."
+**Say:** "One mention, and the agent starts building a memory of who I am. Notice — it confirms what it saved in one natural sentence. Not a dialog. Not an interruption. Just acknowledgment. The dashboard shows it happening in real-time."
 
 ---
 
-## 0:55-1:20 — The Payoff (Conversation 2)
+## 0:40-0:70 — THE PAYOFF
 
-**Show:** Start a fresh conversation. Blank slate.
+**Show:** Start a completely fresh conversation. Blank slate.
 
-**Type:** "What testing framework should I use for this new project?"
+**Type:** "#recall What testing framework should I use?"
 
-**Say:** "Now watch. New conversation, no context. But the agent recalls what it knows about me."
+**Anna responds:** "Based on what you told me earlier, you prefer pytest with xdist for parallel test execution. Since you deploy to Fly.io with Docker, I'd set up your CI to run tests in a container matching your production environment."
 
-**Show:** The agent responds: "Based on what I know, you prefer pytest with xdist for parallel test execution. You also use uv for package management, so you'd want to set up your pyproject.toml with pytest as a dev dependency."
-
-**Say:** "It remembered my preference from a completely different conversation. It even connected the dots — since I use uv, it suggested the uv-specific setup. That's the difference between a chatbot and an agent that actually knows you."
+**Say:** "New conversation. No context. But Anna knows me. It recalled my testing preference AND connected it to my deployment setup — because that's what a memory system should do. Connect dots across conversations."
 
 ---
 
-## 1:20-1:30 — Dashboard + Outro
+## 0:70-0:90 — THE DASHBOARD + OUTRO
 
-**Show:** Click to open the Recall dashboard. The UI shows memory stats and the stored facts.
+**Show:** Click to open the Recall dashboard. Show stats, show the search bar, type "pytest" — results appear instantly.
 
-**Say:** "And there's a dashboard where you can browse and search everything that's been stored. Recall is built on Mimir, an open-source memory backend. Zero config, works out of the box."
+**Say:** "Every memory is browsable. Every recall is transparent. The user is always in control. Recall — one install, and Anna never asks twice."
 
-**Show:** GitHub repo URL on screen.
-
-**Say:** "One install. Never ask twice. Recall — persistent memory for Anna."
+**Show:** GitHub URL on screen.
 
 ---
 
-## Exact Prompts (copy-paste into Anna during recording)
+## Exact Prompts (copy-paste)
 
-### Conversation 1:
+### "Before" (no Recall):
 ```
-#recall Hey, a few things about me: my name is Thomas. I build AI tools — I'm working on a project called Perseus that injects context into LLM prompts. I deploy everything to Fly.io with Docker. Oh, and I strongly prefer pytest over unittest, with xdist for parallel tests.
+What testing framework should I use for my Python project?
 ```
 
-### Conversation 1 (follow-up):
+### Conversation 1 (with Recall):
 ```
-Actually I forgot — I also use uv for Python package management, not pip.
+#recall Hey, a few things about me: my name is Thomas. I'm building an AI tool called Perseus. I deploy to Fly.io with Docker. And I strongly prefer pytest over unittest — I use xdist for parallel tests.
 ```
 
-### Conversation 2 (new conversation):
+### Conversation 2 (fresh):
 ```
-#recall What testing framework should I use for this new project?
+#recall What testing framework should I use?
+```
+
+### Dashboard search:
+```
+pytest
 ```
 
 ---
 
-## Recording Setup
+## Recording Notes
 
-1. Open Anna (desktop or web)
-2. Start Recall dashboard in split view: `anna-app dev` and open the dashboard URL
-3. Screen recorder: OBS or macOS QuickTime screen recording
-4. Resolution: 1920x1080
-5. Audio: Clean voiceover, no background noise
-6. Record in one take — no editing needed if the flow is right
-
-## Post-Recording
-
-1. Trim start/end
-2. Add title card at 0:00: "Recall — Persistent Memory for Anna"
-3. Add GitHub URL overlay at 1:27
-4. Export as MP4, upload to YouTube (unlisted)
+- Record both conversations back-to-back in one take
+- Use split view: Anna chat on left, Recall dashboard on right
+- Let the "Just saved" animation play out naturally (it auto-refreshes every 15s)
+- No music. Clean voiceover. Natural pace.
+- The "Before" section should feel frustrating. The "After" should feel magical.
