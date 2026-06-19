@@ -66,7 +66,7 @@ class MemoryUnavailableError(RuntimeError):
 MANIFEST = {
     "name": "mimir-memory",
     "display_name": "Recall Memory",
-    "version": "1.0.0",
+    "version": "1.0.2",
     "description": (
         "Persistent, searchable memory for Anna. The agent can remember "
         "facts, preferences, decisions, and context across conversations — "
