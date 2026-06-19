@@ -1,88 +1,21 @@
-# Anna Recall — Persistent Memory Plugin for Anna AI
+# Anna Recall — DEPRECATED
 
-**435 lines. Production memory engine. Never ask twice.**
+**⚠️ This plugin is deprecated.** The Anna AI integration is no longer maintained.
+Mimir's cross-session memory now ships as a CrewAI backend instead.
 
-Anna Recall is a 435-line plugin that gives Anna AI persistent memory across sessions. It's thin because [Mimir](https://github.com/tcconnally/mimir) does the heavy lifting — a tested Rust engine with FTS5 keyword search, confidence decay, and structured entity storage. One plugin install, one config line, and Anna remembers everything you've told her.
+→ **[CrewAI Memory](https://perseus.observer/crewai/)** — persistent memory for CrewAI agents (54K stars, PR #6208)
 
-[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](./LICENSE)
-[![Anna AI App](https://img.shields.io/badge/Anna%20AI-App%20Store-purple)]()
+## Why
 
-## The Pitch
+Anna Recall was a 435-line hackathon plugin for the Anna AI-Native App Hackathon (June 2026).
+The plugin worked but the Anna platform integration broke post-hackathon.
 
-> *"This plugin is 435 lines because the heavy lifting is a tested Rust engine. Production memory engine, 15/15 tests, hackathon-speed integration."*
+Perseus Computing now focuses on CrewAI integration, where Mimir provides persistent
+cross-session memory as a first-class backend — community-built, 13 commits, 28 reviews.
 
-| Stat | Value |
-|---|---|
-| Plugin size | 435 lines |
-| Engine tests | 15/15 passing |
-| Backend | Mimir (Rust, SQLite + FTS5) |
-| Setup | 1 config line |
+## Archive
 
-## The Demo Arc
+This repo remains for historical reference. All code is MIT-licensed.
+The original README is preserved in `README.original.md`.
 
-```
-Session 1  →  You tell Anna your name, project, preferences, and a recurring bug.
-                ↓
-Kill Anna  →  Terminate the process. All session state lost — except what Mimir stored.
-                ↓
-Session 2  →  Anna greets you by name, knows your project, remembers the bug. 
-              Zero re-orientation.
-```
-
-That's the whole value proposition in 3 steps.
-
-## Architecture
-
-```
-Anna Chat → #mention Recall
-               ↓
-         manifest.json     (prompt addendum injected)
-               ↓
-    ┌──────────────────────────────────┐
-    │  mimir-memory Executa (Python)   │
-    │  JSON-RPC over stdio             │
-    │  remember / recall / forget       │
-    └──────────────┬───────────────────┘
-                   ↓
-    ┌──────────────────────────────────┐
-    │  Mimir (Rust)                    │
-    │  MCP server, SQLite + FTS5       │
-    │  15/15 production tests          │
-    └──────────────┬───────────────────┘
-                   ↓
-           recall.db (SQLite)
-```
-
-## Features
-
-- **Auto-memory** — the agent decides what's worth remembering; you don't manage it
-- **Full-text search** — find anything by keyword, category, or topic (FTS5)
-- **Smart decay** — important memories stick; stale ones fade (configurable half-lives)
-- **Visual dashboard** — browse, search, and manage memories in the app UI
-- **Zero config** — works out of the box with Mimir's defaults
-
-## Quick Start
-
-```bash
-# Install from Anna App Store
-anna plugins install anna-recall
-
-# Configure — one line points at Mimir
-# anna-config.yaml:
-plugins:
-  recall:
-    backend: mimir
-    db_path: ~/.mimir/data/mimir.db
-```
-
-## Hackathon
-
-Built for the **Anna AI-Native App Hackathon** (Jun 15–22, 2026).
-
-## License
-
-MIT — see [LICENSE](LICENSE)
-
----
-
-[Website](https://perseus.observer/anna-recall/) · [Mimir](https://github.com/tcconnally/mimir)
+→ Active integration: https://github.com/crewAIInc/crewAI/pull/6208
