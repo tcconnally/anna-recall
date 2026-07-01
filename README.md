@@ -2,7 +2,7 @@
 
 **435 lines. Production memory engine. Never ask twice.**
 
-Anna Recall is a 435-line plugin that gives Anna AI persistent memory across sessions. It's thin because [Mimir](https://github.com/tcconnally/mimir) does the heavy lifting — a tested Rust engine with FTS5 keyword search, confidence decay, and structured entity storage. One plugin install, one config line, and Anna remembers everything you've told her.
+Anna Recall is a 435-line plugin that gives Anna AI persistent memory across sessions. It's thin because [Mneme](https://github.com/tcconnally/mimir) does the heavy lifting — a tested Rust engine with FTS5 keyword search, confidence decay, and structured entity storage. One plugin install, one config line, and Anna remembers everything you've told her.
 
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](./LICENSE)
 [![Anna AI App](https://img.shields.io/badge/Anna%20AI-App%20Store-purple)]()
@@ -15,7 +15,7 @@ Anna Recall is a 435-line plugin that gives Anna AI persistent memory across ses
 |---|---|
 | Plugin size | 435 lines |
 | Engine tests | 15/15 passing |
-| Backend | Mimir (Rust, SQLite + FTS5) |
+| Backend | Mneme (Rust, SQLite + FTS5) |
 | Setup | 1 config line |
 
 ## The Demo Arc
@@ -23,7 +23,7 @@ Anna Recall is a 435-line plugin that gives Anna AI persistent memory across ses
 ```
 Session 1  →  You tell Anna your name, project, preferences, and a recurring bug.
                 ↓
-Kill Anna  →  Terminate the process. All session state lost — except what Mimir stored.
+Kill Anna  →  Terminate the process. All session state lost — except what Mneme stored.
                 ↓
 Session 2  →  Anna greets you by name, knows your project, remembers the bug. 
               Zero re-orientation.
@@ -45,7 +45,7 @@ Anna Chat → #mention Recall
     └──────────────┬───────────────────┘
                    ↓
     ┌──────────────────────────────────┐
-    │  Mimir (Rust)                    │
+    │  Mneme (Rust)                    │
     │  MCP server, SQLite + FTS5       │
     │  15/15 production tests          │
     └──────────────┬───────────────────┘
@@ -59,7 +59,7 @@ Anna Chat → #mention Recall
 - **Full-text search** — find anything by keyword, category, or topic (FTS5)
 - **Smart decay** — important memories stick; stale ones fade (configurable half-lives)
 - **Visual dashboard** — browse, search, and manage memories in the app UI
-- **Zero config** — works out of the box with Mimir's defaults
+- **Zero config** — works out of the box with Mneme's defaults
 
 ## Quick Start
 
@@ -67,7 +67,7 @@ Anna Chat → #mention Recall
 # Install from Anna App Store
 anna plugins install anna-recall
 
-# Configure — one line points at Mimir
+# Configure — one line points at Mneme
 # anna-config.yaml:
 plugins:
   recall:
@@ -85,4 +85,4 @@ MIT — see [LICENSE](LICENSE)
 
 ---
 
-[Website](https://perseus.observer/anna-recall/) · [Mimir](https://github.com/tcconnally/mimir)
+[Website](https://perseus.observer/anna-recall/) · [Mneme](https://github.com/tcconnally/mimir)

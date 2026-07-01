@@ -18,7 +18,7 @@ Most AI chat platforms are stateless — the agent forgets everything when the c
 
 **You get a dashboard** where you can browse, search, and manage everything that's been stored. No configuration, no manual tagging — the AI handles memory hygiene on its own.
 
-Built on **Mimir**, a battle-tested persistent memory backend with SQLite + FTS5 full-text search. Real persistence, not a mock.
+Built on **Mneme**, a battle-tested persistent memory backend with SQLite + FTS5 full-text search. Real persistence, not a mock.
 
 ## How It Uses AI
 
@@ -45,8 +45,8 @@ Every Anna user has experienced the frustration of reintroducing themselves. Dev
 
 ## Built With
 
-- **Python** — Executa plugin proxying Anna JSON-RPC calls to Mimir
-- **Mimir** (Rust) — Open-source persistent memory backend
+- **Python** — Executa plugin proxying Anna JSON-RPC calls to Mneme
+- **Mneme** (Rust) — Open-source persistent memory backend
 - **Anna Executa Protocol** — JSON-RPC 2.0 over stdio
 - **Anna App Runtime SDK** — Host API for tool invocation
 - **Vanilla HTML/CSS/JS** — Dashboard UI
@@ -54,7 +54,7 @@ Every Anna user has experienced the frustration of reintroducing themselves. Dev
 ## Try It
 
 ```bash
-# Prerequisites: Mimir installed (github.com/tcconnally/mimir)
+# Prerequisites: Mneme installed (github.com/tcconnally/mimir)
 npm i -g @anna-ai/cli
 git clone https://github.com/tcconnally/anna-recall
 cd anna-recall
