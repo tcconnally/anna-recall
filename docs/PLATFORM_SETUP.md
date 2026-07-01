@@ -2,7 +2,7 @@
 
 ## What's ready
 
-- ✅ PyInstaller binary built (12MB, self-contained, mimir bundled)
+- ✅ PyInstaller binary built (12MB, self-contained, mneme bundled)
 - ✅ GitHub Release v1.0.0: https://github.com/tcconnally/anna-recall/releases/tag/v1.0.0
 - ✅ Download URL: https://github.com/tcconnally/anna-recall/releases/download/v1.0.0/mimir-memory-linux-x86_64.tar.gz
 - ✅ SHA256: b3cf36ef7c1612f657b2519c75a04bd613d3cb5cb8f65024ef64756ec1baf6f8
@@ -102,7 +102,7 @@ Submit v1 before **Friday June 19 EOD ET** to get official feedback from the Ann
 
 ## Troubleshooting
 
-**If describe times out:** The mimir binary inside the PyInstaller package takes ~2s to extract and start. Anna's 5s timeout should handle this. If it fails, the binary is too large — we can slim it down.
+**If describe times out:** The mneme binary inside the PyInstaller package takes ~2s to extract and start. Anna's 5s timeout should handle this. If it fails, the binary is too large — we can slim it down.
 
 **If install fails:** Check the install logs in Anna Developer Console → Executa → My Tools → click the tool → Install Logs.
 
