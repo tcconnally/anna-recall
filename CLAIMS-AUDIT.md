@@ -2,6 +2,6 @@
 
 | Claim | Status | Evidence |
 |---|---|---|
-| Persistent memory for Anna | ✅ | `mimir_memory_plugin.py` — MCP calls to Mneme |
-| Cross-session recall | ✅ | Mneme SQLite persistence |
-| Zero config | ✅ | Uses bundled Mneme binary |
+| Persistent memory for Anna | ✅ | `mimir_memory_plugin.py` — MCP calls to Perseus Vault |
+| Cross-session recall | ✅ | Perseus Vault SQLite persistence |
+| Zero config | ✅ | Uses bundled Perseus Vault binary |
