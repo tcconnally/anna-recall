@@ -36,8 +36,8 @@ Recall uses all three Anna building blocks:
 The app manifest (`manifest.json`) bundles all three with a system prompt addendum that activates the memory behavior when the user `#mention`s Recall.
 
 ## Built With
-- **Python** — Executa plugin (mimir-memory) proxying Anna's JSON-RPC calls to Mneme
-- **Mneme** (Rust) — Battle-tested persistent memory backend with SQLite + FTS5 full-text search
+- **Python** — Executa plugin (mimir-memory) proxying Anna's JSON-RPC calls to Perseus Vault
+- **Perseus Vault** (Rust) — Battle-tested persistent memory backend with SQLite + FTS5 full-text search
 - **Anna Executa Protocol** — JSON-RPC 2.0 over stdio, `describe`/`invoke`/`health` methods
 - **Anna App Runtime SDK** — Host API for tool invocation and window management
 - **Vanilla HTML/CSS/JS** — Memory dashboard UI with real-time search and stats
@@ -50,7 +50,7 @@ https://github.com/tcconnally/anna-recall
 
 ## Try It
 1. `npm i -g @anna-ai/cli`
-2. Install Mneme: https://github.com/tcconnally/mimir
+2. Install Perseus Vault: https://github.com/Perseus-Computing-LLC/perseus-vault
 3. `git clone https://github.com/tcconnally/anna-recall && cd anna-recall`
 4. `anna-app dev`
 5. Open http://localhost:5180
